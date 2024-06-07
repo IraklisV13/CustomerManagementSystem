@@ -87,7 +87,7 @@ namespace CustomerManagementSystem.Services
             }
         }
 
-        private async Task<List<ProductDto>> FetchProductsFromSource(string sourceUrl)
+        public async Task<List<ProductDto>> FetchProductsFromSource(string sourceUrl)
         {
             if (string.IsNullOrWhiteSpace(sourceUrl))
             {
