@@ -9,10 +9,10 @@
         public string Category { get; set; }
         public string Image { get; set; }
         public Rating Rating { get; set; }
-        public int ProductCatalogId { get; set; }
-        public int ExternalId { get; set; } // Unique identifier from the external API
+        public int? ProductCatalogId { get; set; }
+        public int ExternalId { get; set; }
 
-        public ProductCatalog ProductCatalog { get; set; }
+        public ProductCatalog? ProductCatalog { get; set; }
     }
 
     public class Rating

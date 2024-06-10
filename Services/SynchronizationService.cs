@@ -22,9 +22,16 @@ namespace CustomerManagementSystem.Services
                 var context = scope.ServiceProvider.GetRequiredService<CMSContext>();
                 var productCatalogs = await context.ProductCatalogs.ToListAsync(cancellationToken);
 
-                foreach (var catalog in productCatalogs)
+                if (productCatalogs.Count > 0)
                 {
-                    await SyncProductsAsync(catalog.ProductCatalogId);
+                    foreach (var catalog in productCatalogs)
+                    {
+                        await SyncProductsAsync(catalog.ProductCatalogId);
+                    }
+                }
+                else
+                {
+                    await SyncProductsAsync(0);
                 }
             }
         }
@@ -37,9 +44,21 @@ namespace CustomerManagementSystem.Services
             {
                 var context = scope.ServiceProvider.GetRequiredService<CMSContext>();
                 var catalog = await context.ProductCatalogs.FindAsync(catalogId);
-                if (catalog == null) throw new Exception("Catalog not found");
+                //if (catalog == null)
+                //{
+                //    throw new Exception($"Catalog with ID {catalogId} not found");
+                //}
 
-                var products = await FetchProductsFromSource(catalog.SourceUrl);
+                List<ProductDto> products;
+
+                if (catalogId == 0)
+                {
+                    products = await FetchProductsFromSource("");
+                }
+                else
+                {
+                    products = await FetchProductsFromSource(catalog.SourceUrl);
+                }
 
                 foreach (var productDto in products)
                 {
@@ -60,7 +79,7 @@ namespace CustomerManagementSystem.Services
                                 Rate = productDto.Rating.Rate,
                                 Count = productDto.Rating.Count
                             },
-                            ProductCatalogId = catalogId,
+                            ProductCatalogId = (catalogId == 0) ? null : catalogId,
                             ExternalId = productDto.Id
                         };
 
@@ -82,7 +101,11 @@ namespace CustomerManagementSystem.Services
                     }
                 }
 
+                if (catalog != null)
+                {
                 catalog.LastSyncDate = DateTime.Now;
+                }
+
                 await context.SaveChangesAsync();
             }
         }
