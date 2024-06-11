@@ -1,6 +1,8 @@
 ﻿using CustomerManagementSystem.Models;
+using CustomerManagementSystem.Notifications;
 using CustomerManagementSystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CustomerManagementSystem.Controllers
 {
@@ -9,10 +11,12 @@ namespace CustomerManagementSystem.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly IHubContext<OrderHub> _hubContext;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(IOrderService orderService, IHubContext<OrderHub> hubContext)
         {
             _orderService = orderService;
+            _hubContext = hubContext;
         }
 
         [HttpGet("{id}")]
@@ -34,6 +38,10 @@ namespace CustomerManagementSystem.Controllers
         public async Task<ActionResult> AddOrder([FromBody] Order order)
         {
             await _orderService.AddOrderAsync(order);
+
+            // Notify connected clients about the new order
+            await _hubContext.Clients.All.SendAsync("ReceiveOrderNotification", $"New order placed with ID: {order.OrderId}");
+
             return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderId }, order);
         }
 
