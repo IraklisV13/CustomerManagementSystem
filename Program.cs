@@ -1,5 +1,6 @@
 using CustomerManagementSystem.Data;
 using CustomerManagementSystem.DBContexts;
+using CustomerManagementSystem.Notifications;
 using CustomerManagementSystem.Repositories;
 using CustomerManagementSystem.Services;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +13,8 @@ namespace CustomerManagementSystem
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services
             builder.Services.AddDbContext<CMSContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            //builder.Services.AddDbContext<CMSContext>(options =>
-            //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-            //                         sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
 
             // Repositories
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -29,12 +25,13 @@ namespace CustomerManagementSystem
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddHostedService<SynchronizationService>();
-
+            builder.Services.AddHostedService<ScheduledSyncService>();
             builder.Services.AddControllers();
 
-            ////  ???  Add database connection string
-            //builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            // Notifications
+            builder.Services.AddSignalR();
 
+            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -52,6 +49,14 @@ namespace CustomerManagementSystem
             app.UseAuthorization();
 
             app.MapControllers();
+
+            // Map the SignalR hub endpoint
+            app.MapHub<OrderHub>("/orderHub");
+
+            // Start the simulated dashboard client
+            var serviceProvider = builder.Services.BuildServiceProvider();
+            var simulatedDashboard = new SimulatedDashboard("https://localhost:7111/orderHub", serviceProvider);
+            //simulatedDashboard.StartAsync().GetAwaiter().GetResult();
 
             // Database Initialization
             CreateDbIfNotExists(app);

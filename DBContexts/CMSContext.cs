@@ -11,6 +11,7 @@ namespace CustomerManagementSystem.DBContexts
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Rating> Ratings { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public CMSContext(DbContextOptions<CMSContext> options) : base(options) { }
 
@@ -30,7 +31,7 @@ namespace CustomerManagementSystem.DBContexts
 
             modelBuilder.Entity<Product>()
                 .HasIndex(p => new { p.ExternalId, p.ProductCatalogId })
-                .IsUnique(); // Ensure combination of ExternalId and ProductCatalogId is unique
+                .IsUnique();
 
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.ProductCatalog)
